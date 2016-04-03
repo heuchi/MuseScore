@@ -1258,6 +1258,50 @@ void Score::layoutStage2()
                   // get defaults from time signature properties
                   bm = Groups::endBeam(cr, prev);
 
+		  // proof of concept:
+		  // do traditional voice beaming
+		  // depending on lyrics
+
+		  if (bm == Beam::Mode::AUTO) {
+		    ChordRest* next = 0;
+		    Segment* nextSegment;
+		    // find next ChordRest in this track
+		    nextSegment = segment->next1(st);
+		    if (nextSegment) {
+		      next = static_cast<ChordRest*>(nextSegment->element(track));
+		    }
+
+		    if (cr->lyricsList().size() != 0) {
+		      // current cr has a lyrics syllable
+		      if (next && next->isChord()) {
+			// check next note
+			if (next->lyricsList().size() != 0) {
+			  // next has lyrics -> set current to NONE
+			  bm = Beam::Mode::NONE;
+			} else if (cr->tick() + cr->actualTicks() < next->tick()) {
+			  // there is a gap between this and the next
+			  // -> set current to NONE
+			  bm = Beam::Mode::NONE;
+			} else {
+			  // next note has no lyrics
+			  // if there is already a beam
+			  // end it here!
+			  if (beam) {
+			    beam->layout1();
+			    beam = 0;
+			  }
+			  if (a1) {
+			    a1->removeDeleteBeam();
+			    a1 = 0;
+			  }
+			}
+		      } else {
+			// last note -> set current to NONE
+			bm = Beam::Mode::NONE;
+		      }
+		    }
+		  }
+
                   // perform additional context-dependent checks
                   if (bm == Beam::Mode::AUTO) {
                         // check if we need to break beams according to minimum duration in current / previous beat
