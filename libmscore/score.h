@@ -368,6 +368,8 @@ class Score : public QObject, public ScoreElement {
       int _linkId { 0 };
       MasterScore* _masterScore;
       QList<MuseScoreView*> viewer;
+      Excerpt* _excerpt = 0;
+
 
       QString _mscoreVersion;
       int _mscoreRevision;
@@ -543,6 +545,9 @@ class Score : public QObject, public ScoreElement {
       void readStaff(XmlReader&);
       bool read(XmlReader&);
 
+      Excerpt* excerpt()            { return _excerpt; }
+      void setExcerpt(Excerpt* e)   { _excerpt = e;     }
+
       void cmdRemovePart(Part*);
       void cmdAddTie();
       void cmdAddHairpin(bool);
@@ -637,6 +642,8 @@ class Score : public QObject, public ScoreElement {
 
       void addElement(Element*);
       void removeElement(Element*);
+
+      void cloneVoice(int strack, int dtrack, Measure* sm, Measure* dm, bool link = true);
 
       Note* addPitch(NoteVal&, bool addFlag);
       void addPitch(int pitch, bool addFlag);
@@ -1186,7 +1193,7 @@ class MasterScore : public Score {
       void updateChannel();
       void setSoloMute();
 
-      void addExcerpt(Score*);
+      void addExcerpt(Score* score, QMultiMap<int, int>& tracks, Excerpt* ex = 0);
       void removeExcerpt(Score*);
       };
 

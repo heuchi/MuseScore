@@ -528,7 +528,8 @@ void Segment::add(Element* el)
                               }
                         else
                               v = el->visible();
-                        if (v)
+
+                        if (v && int(measure()->mstaves().size()) > track)
                               measure()->mstaff(track / VOICES)->hasVoices = true;
                         }
 

@@ -1951,6 +1951,9 @@ void Score::respace(std::vector<ChordRest*>* elements)
 
 qreal Score::computeMinWidth(Segment* s, bool isFirstMeasureInSystem)
       {
+
+      if (!s)
+            return 0.0;
       qreal x;
 
       Shape ls;
@@ -3661,6 +3664,7 @@ void Score::doLayoutRange(int stick, int etick)
       //---------------------------------------------------
 
       Measure* m = tick2measure(stick);
+
       // start layout one measure earlier to handle clefs and cautionary elements
       if (m->prevMeasureMM()) {
             m = m->prevMeasureMM();

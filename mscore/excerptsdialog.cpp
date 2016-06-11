@@ -311,12 +311,13 @@ void ExcerptsDialog::createExcerptClicked(QListWidgetItem* cur)
             return;
 
       Score* nscore = new Score(e->oscore());
+      nscore->setExcerpt(e);
       e->setPartScore(nscore);
 
       nscore->setName(e->title()); // needed before AddExcerpt
 
       qDebug() << " + Add part : " << e->title();
-      score->undo(new AddExcerpt(nscore));
+      score->undo(new AddExcerpt(nscore, e->tracks()));
       createExcerpt(e);
 
       // a new excerpt is created in AddExcerpt, make sure the parts are filed
@@ -386,7 +387,7 @@ void ExcerptsDialog::accept()
 
                         deleteExcerpt(e);
                         // remove the excerpt
-                        score->undo(new RemoveExcerpt(partScore));
+                        score->undo(new RemoveExcerpt(partScore, e->tracks()));
                         }
                   }
             else
@@ -405,6 +406,7 @@ void ExcerptsDialog::accept()
             }
 
       // Third pass : Remove empty parts.
+      qDebug() << "\nThird pass : remove empty parts";
       int i = 0;
       while (i < excerptList->count()) {
             // This new part is empty, so we don't create an excerpt but remove it from the list.
