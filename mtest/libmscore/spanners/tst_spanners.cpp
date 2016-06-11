@@ -302,18 +302,16 @@ void TestSpanners::spanners05()
 
       Excerpt ex(score);
       ex.setPartScore(nscore);
+      nscore->setExcerpt(&ex);
       ex.setTitle(parts.front()->longName());
       ex.setParts(parts);
       ::createExcerpt(&ex);
       QVERIFY(nscore);
 
       nscore->setName(parts.front()->partName());
-<<<<<<< HEAD
-      score->undo(new AddExcerpt(nscore));
-=======
+
       QMultiMap<int, int> tracks;
       score->Score::undo(new AddExcerpt(nscore, tracks));
->>>>>>> b82e713... QMultiMap
 
       QVERIFY(saveCompareScore(score, "glissando-cloning02.mscx", DIR + "glissando-cloning02-ref.mscx"));
       delete score;

@@ -263,8 +263,8 @@
         <move>0/1</move>
         <Beam id="4">
           <track>1</track>
-          <l1>28</l1>
-          <l2>28</l2>
+          <l1>4</l1>
+          <l2>4</l2>
           </Beam>
         <Chord>
           <track>1</track>
