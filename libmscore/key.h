@@ -22,6 +22,20 @@ class Score;
 class XmlReader;
 enum class AccidentalVal : signed char;
 
+#undef MS_QML_ENUM
+#define MS_QML_ENUM(name, storageType, ...)\
+      enum class name : storageType {\
+            __VA_ARGS__\
+      };\
+      class MSQE_##name {\
+            Q_GADGET\
+            Q_ENUMS(E)\
+      public:\
+            enum class E : storageType {\
+                  __VA_ARGS__\
+            };\
+      };
+
 //---------------------------------------------------------
 //   Key
 //---------------------------------------------------------
