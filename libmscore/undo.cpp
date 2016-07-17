@@ -891,55 +891,47 @@ void Score::undoAddElement(Element* element)
                   staffList.append(s->staff(0));
 
             foreach (Staff* staff, staffList) {
-                  Score* score = staff->score();
-                  int staffIdx = score->staffIdx(staff);
+                  Score* score  = staff->score();
+                  int staffIdx  = score->staffIdx(staff);
+                  int ntrack    = staffIdx * VOICES;
                   Element* ne;
 
-                  QList<int> tr;
-                  if (staff->excerpt() && strack > -1)
-                        tr = staff->excerpt()->tracks().values(strack);
-                  else
-                        tr.append(strack);
+                  if (staff->score() == ostaff->score())
+                        ne = element;
+                  else {
+                        // only create linked volta for first staff
+                        if (et == Element::Type::VOLTA && element->track() != 0)
+                              continue;
+                        ne = element->linkedClone();
+                        ne->setScore(score);
+                        ne->setSelected(false);
+                        ne->setTrack(staffIdx * VOICES + element->voice());
+                        }
 
-                  for (int ntrack : tr) {
-
-                        if (staff->score() == ostaff->score())
-                              ne = element;
-                        else {
-                              // only create linked volta for first staff
-                              if (et == Element::Type::VOLTA && element->track() != 0)
-                                    continue;
-                              ne = element->linkedClone();
-                              ne->setScore(score);
-                              ne->setSelected(false);
-                              ne->setTrack(staffIdx * VOICES + element->voice());
-                              }
-
-                        if (et == Element::Type::VOLTA) {
-                              Spanner* nsp = static_cast<Spanner*>(ne);
-                              Spanner* sp = static_cast<Spanner*>(element);
-                              int staffIdx1 = sp->track() / VOICES;
-                              int staffIdx2 = sp->track2() / VOICES;
-                              int diff = staffIdx2 - staffIdx1;
-                              nsp->setTrack2((staffIdx + diff) * VOICES + (sp->track2() % VOICES));
-                              undo(new AddElement(nsp));
-                              }
-                        else if (et == Element::Type::MARKER || et == Element::Type::JUMP) {
-                              Measure* om = static_cast<Measure*>(element->parent());
-                              Measure* m  = score->tick2measure(om->tick());
-                              ne->setTrack(element->track());
-                              ne->setParent(m);
-                              undo(new AddElement(ne));
-                              }
-                        else {
-                              Segment* segment  = static_cast<Segment*>(element->parent());
-                              int tick          = segment->tick();
-                              Measure* m        = score->tick2measure(tick);
-                              Segment* seg      = m->undoGetSegment(Segment::Type::ChordRest, tick);
-                              ne->setTrack(ntrack);
-                              ne->setParent(seg);
-                              undo(new AddElement(ne));
-                              }
+                  if (et == Element::Type::VOLTA) {
+                        Spanner* nsp = static_cast<Spanner*>(ne);
+                        Spanner* sp = static_cast<Spanner*>(element);
+                        int staffIdx1 = sp->track() / VOICES;
+                        int staffIdx2 = sp->track2() / VOICES;
+                        int diff = staffIdx2 - staffIdx1;
+                        nsp->setTrack2((staffIdx + diff) * VOICES + (sp->track2() % VOICES));
+                        undo(new AddElement(nsp));
+                        }
+                  else if (et == Element::Type::MARKER || et == Element::Type::JUMP) {
+                        Measure* om = static_cast<Measure*>(element->parent());
+                        Measure* m  = score->tick2measure(om->tick());
+                        ne->setTrack(element->track());
+                        ne->setParent(m);
+                        undo(new AddElement(ne));
+                        }
+                  else {
+                        Segment* segment  = static_cast<Segment*>(element->parent());
+                        int tick          = segment->tick();
+                        Measure* m        = score->tick2measure(tick);
+                        Segment* seg      = m->undoGetSegment(Segment::Type::ChordRest, tick);
+                        ne->setTrack(ntrack);
+                        ne->setParent(seg);
+                        undo(new AddElement(ne));
                         }
                   }
             return;
@@ -1069,6 +1061,23 @@ void Score::undoAddElement(Element* element)
             else
                   tr.append(strack);
 
+            // Some elements in voice 1 of a staff should be copied to every track which has a linked voice in this staff
+            if (tr.isEmpty() && (element->type() == Element::Type::SYMBOL
+                || element->type() == Element::Type::IMAGE
+                || element->type() == Element::Type::TREMOLOBAR
+                || element->type() == Element::Type::DYNAMIC
+                || element->type() == Element::Type::STAFF_TEXT
+                || element->type() == Element::Type::FRET_DIAGRAM
+                || element->type() == Element::Type::HARMONY
+                || element->type() == Element::Type::HAIRPIN
+                || element->type() == Element::Type::HAIRPIN
+                || element->type() == Element::Type::OTTAVA
+                || element->type() == Element::Type::TRILL
+                || element->type() == Element::Type::TEXTLINE
+                || element->type() == Element::Type::PEDAL)) {
+                  tr.append(staffIdx * VOICES);
+                  }
+
             int it = 0;
             for (int ntrack : tr) {
                   if ((ntrack & ~3) != staffIdx * VOICES) {
@@ -1128,7 +1137,6 @@ void Score::undoAddElement(Element* element)
                               break;
                               }
                         Articulation* na = static_cast<Articulation*>(ne);
-                        int ntrack       = staffIdx * VOICES + a->voice();
                         na->setTrack(ntrack);
                         if (a->parent()->isChordRest()) {
                               ChordRest* cr = a->chordRest();
@@ -1156,7 +1164,6 @@ void Score::undoAddElement(Element* element)
                               qWarning("undoAddSegment: segment not found");
                               break;
                               }
-                        int ntrack    = staffIdx * VOICES + element->voice();
                         ne->setTrack(ntrack);
                         ChordRest* ncr = static_cast<ChordRest*>(seg->element(ntrack));
                         ne->setParent(ncr);
@@ -1176,7 +1183,6 @@ void Score::undoAddElement(Element* element)
                         int tick         = segment->tick();
                         Measure* m       = score->tick2measure(tick);
                         Segment* seg     = m->undoGetSegment(Segment::Type::ChordRest, tick);
-                        int ntrack       = staffIdx * VOICES + element->voice();
                         ne->setTrack(ntrack);
                         ne->setParent(seg);
                         undo(new AddElement(ne));
@@ -1208,11 +1214,11 @@ void Score::undoAddElement(Element* element)
                         int staffIdx2 = sp->track2() / VOICES;
                         int diff      = staffIdx2 - staffIdx1;
                         nsp->setTrack2((staffIdx + diff) * VOICES + (sp->track2() % VOICES));
-
                         nsp->setTrack(ntrack);
 
                         QList<int> tl2;
-                        if (staff->excerpt()) {
+                        if (staff->excerpt() && element->isSlur()) {
+                              nsp->setTrack(ntrack);
                                     tl2 = staff->excerpt()->tracks().values(sp->track2());
                                     if (tl2.isEmpty()) {
                                           it++;
@@ -1220,6 +1226,8 @@ void Score::undoAddElement(Element* element)
                                           }
                                    nsp->setTrack2(tl2.at(it));
                               }
+                        else if (!element->isSlur())
+                              nsp->setTrack(ntrack & ~3);
 
                         // determine start/end element for slurs
                         // this is only necessary if start/end element is
@@ -1339,7 +1347,6 @@ void Score::undoAddElement(Element* element)
                               m = m->prevMeasure();
                         Segment* seg     = m->undoGetSegment(Segment::Type::Breath, tick);
                         Breath* nbreath  = static_cast<Breath*>(ne);
-                        int ntrack       = staffIdx * VOICES + nbreath->voice();
                         nbreath->setScore(score);
                         nbreath->setTrack(ntrack);
                         nbreath->setParent(seg);

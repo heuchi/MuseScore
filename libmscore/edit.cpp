@@ -3262,6 +3262,7 @@ void Score::cloneVoice(int strack, int dtrack, Measure* sm, Measure* dm, bool li
                         }
                   }
             }
+
       score->doLayoutRange(dm->tick(), dm->tick() + dm->ticks());
       }
 
