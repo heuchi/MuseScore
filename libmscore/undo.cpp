@@ -1386,6 +1386,11 @@ void Score::undoAddCR(ChordRest* cr, Measure* measure, int tick)
             else
                   tracks.append(strack);
 
+            // when adding a full measure rest, make sure it is copied to all excerpts
+            if (tracks.empty() && cr->isRest() && toRest(cr)->isFullMeasureRest()) {
+                  tracks.append(staff->idx() * VOICES);
+                  }
+
             for (int ntrack : tracks) {
                   if (ntrack < staff->part()->startTrack() || ntrack >= staff->part()->endTrack())
                         continue;

@@ -3255,7 +3255,7 @@ void Score::cloneVoice(int strack, int dtrack, Measure* sm, Measure* dm, bool li
                   if (strack % VOICES && !(dtrack % VOICES) && (!tst || (!tst->element(dtrack)))) {
                         Rest* rest = new Rest(score);
                         rest->setDuration(dm->len());
-                        rest->setDurationType(dm->len().ticks());
+                        rest->setDurationType(TDuration::DurationType::V_MEASURE);
                         rest->setTrack(dtrack);
                         Segment* segment = dm->getSegment(rest, dm->tick());
                         segment->add(rest);

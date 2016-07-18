@@ -634,7 +634,7 @@ void cloneStaves(Score* oscore, Score* score, const QList<int>& map, QMultiMap<i
                                     if (srcTrack % VOICES && !(track % VOICES) && (!tst || (!tst->element(track)))) {
                                           Rest* rest = new Rest(score);
                                           rest->setDuration(nm->len());
-                                          rest->setDurationType(nm->len().ticks());
+                                          rest->setDurationType(TDuration::DurationType::V_MEASURE);
                                           rest->setTrack(track);
                                           Segment* segment = nm->getSegment(rest, nm->tick());
                                           segment->add(rest);
