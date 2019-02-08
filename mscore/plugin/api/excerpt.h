@@ -14,6 +14,7 @@
 #define __PLUGIN_API_EXCERPT_H__
 
 #include "libmscore/excerpt.h"
+#include "scoreelement.h"
 
 namespace Ms {
 
@@ -28,8 +29,6 @@ class Score;
 //   This is based on the wrapper in scoreelement.h, which
 //   we cannot use here, because Ms::Excerpt is not derived
 //   from Ms::ScoreElement.
-//   Since a plugin should never need to create an Excerpt
-//   instance by itself, we don't care for Ownership here.
 //---------------------------------------------------------
 
 class Excerpt : public QObject {
@@ -37,59 +36,26 @@ class Excerpt : public QObject {
     Q_PROPERTY(Ms::PluginAPI::Score* partScore READ partScore)
     Q_PROPERTY(QString               title     READ title)
 
- protected:
+    Ownership _ownership;
+
+protected:
     Ms::Excerpt* const e;
 
  public:
-    Excerpt(Ms::Excerpt* _e = nullptr)
-       : QObject(), e(_e) {}
+    Excerpt(Ms::Excerpt* _e = nullptr, Ownership own = Ownership::PLUGIN)
+       : QObject(), _ownership(own), e(_e) {}
     Excerpt(const Excerpt&) = delete;
     Excerpt& operator=(const Excerpt&) = delete;
-    virtual ~Excerpt() {};
+    virtual ~Excerpt();
+
+    Ownership ownership() const { return _ownership; }
+    void setOwnership(Ownership o) { _ownership = o; }
 
     Score* partScore();
     QString title() { return e->title(); }
 };
 
-//---------------------------------------------------------
-//   wrap
-//---------------------------------------------------------
-template <class Wrapper, class T>
-Wrapper* excerptWrap(T* t)
-      {
-      Wrapper* w = t ? new Wrapper(t) : nullptr;
-      // All wrapper objects should belong to JavaScript code.
-      QQmlEngine::setObjectOwnership(w, QQmlEngine::JavaScriptOwnership);
-      return w;
-      }
-
-extern Excerpt* excerptWrap(Ms::Excerpt* e);
-
-//---------------------------------------------------------
-//   qml access to containers of Excerpt
-//
-//   QmlExcerptsListAccess provides a convenience interface
-//   for QQmlListProperty providing read-only access to
-//   plugins for Excerpts containers.
-//
-//   based on QmlListAccess in scoreelement.h
-//---------------------------------------------------------
-
-template <typename T, class Container>
-class QmlExcerptsListAccess : public QQmlListProperty<T> {
-public:
-      QmlExcerptsListAccess(QObject* obj, Container& container)
-            : QQmlListProperty<T>(obj, &container, &count, &at) {};
-
-      static int count(QQmlListProperty<T>* l)     { return int(static_cast<Container*>(l->data)->size()); }
-      static T* at(QQmlListProperty<T>* l, int i)  { return excerptWrap<T>(static_cast<Container*>(l->data)->at(i)); }
-      };
-
-template<typename T, class Container>
-QmlExcerptsListAccess<T, Container> wrapExcerptsContainerProperty(QObject* obj, Container& c)
-      {
-      return QmlExcerptsListAccess<T, Container>(obj, c);
-      }
+extern Excerpt* wrap(Ms::Excerpt* e, Ownership own = Ownership::SCORE);
 
 } // namespace PluginAPI
 } // namespace Ms

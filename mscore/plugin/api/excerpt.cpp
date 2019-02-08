@@ -18,6 +18,16 @@ namespace Ms {
 namespace PluginAPI {
 
 //---------------------------------------------------------
+//   Excerpt
+//---------------------------------------------------------
+
+Excerpt::~Excerpt()
+      {
+      if (_ownership == Ownership::PLUGIN)
+            delete e;
+      }
+
+//---------------------------------------------------------
 //   Excerpt::partScore
 //---------------------------------------------------------
 
@@ -30,9 +40,9 @@ Score* Excerpt::partScore()
 //   wrap
 //---------------------------------------------------------
 
-Excerpt* excerptWrap(Ms::Excerpt* e)
+Excerpt* wrap(Ms::Excerpt* e, Ownership own)
       {
-      return excerptWrap<Excerpt>(e);
+      return wrap<Excerpt>(e, own);
       }
 
 }

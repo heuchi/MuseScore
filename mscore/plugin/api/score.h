@@ -105,7 +105,7 @@ class Score : public Ms::PluginAPI::ScoreElement {
       QString mscoreRevision() { return QString::number(score()->mscoreRevision(), /* base */ 16); }
 
       QQmlListProperty<Part> parts() { return wrapContainerProperty<Part>(this, score()->parts());   }
-      QQmlListProperty<Excerpt> excerpts() { return wrapExcerptsContainerProperty<Excerpt>(this, score()->excerpts());   }
+      QQmlListProperty<Excerpt> excerpts() { return wrapContainerProperty<Excerpt>(this, score()->excerpts());   }
       };
 } // namespace PluginAPI
 } // namespace Ms
